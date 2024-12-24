@@ -1,5 +1,5 @@
 # Use an official Node.js image as the base image
-FROM node:18-slim
+FROM node:18
 
 # Install necessary dependencies for Chromium
 RUN apt-get update && apt-get install -y \
@@ -28,8 +28,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json (if exists) to install dependencies
 COPY package*.json ./
 
-# Install dependencies, including playwright and other dependencies
-RUN npm install --production && npx playwright install
+# Install all dependencies (including devDependencies for now)
+RUN npm install && npx playwright install && npx playwright install-deps
+RUN ls -l node_modules/express
 
 # Copy the rest of the application code
 COPY . .
@@ -37,5 +38,5 @@ COPY . .
 # Expose port 6001 (adjust if needed)
 EXPOSE 6001
 
-# Start the application with nodemon (note: this is for development purposes)
-CMD ["npm", "start"]
+# Start the application
+CMD ["node", "app.js"]

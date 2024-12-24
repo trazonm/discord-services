@@ -1,0 +1,8 @@
+services:
+  node-app:
+    build: .
+    ports:
+      - "6001:6001"
+    command: ["node", "app.js"]
+    container_name: discord-services
+    restart: unless-stopped
