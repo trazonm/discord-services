@@ -6,16 +6,13 @@ const textToSpeech = async (req, res) => {
          //TTS Character
          const cid = req.body.cid;
          const character = await characterAI.fetchCharacter(cid);
-   
+         const text = req.body.content;
+         const content = text.replace(/(\r\n|\n|\r)/gm, "");
          const dm = await character.DM();
    
          // send it a message
-         const message = await dm.sendMessage(`!Re ${req.body.content}`);
-   
-         const potentialVoices = await characterAI.searchCharacterVoices("Miles G Morales");
-   
-         // get the text content
-         
+         const message = await dm.sendMessage(`!Re "${content}"`);   
+            
          //Miles G Morales voice (Earth 42)
          let tts = await message.getTTSUrl(req.body.voiceId);
    
