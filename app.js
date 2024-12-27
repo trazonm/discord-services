@@ -6,6 +6,7 @@ require('dotenv').config();
 const { startBot } = require('./controllers/discordController');
 const { subscribeWebhook, getWebhooks } = require('./controllers/webhookController');
 const { htmlToImageFunction } = require('./controllers/htmlToImageController'); // Updated import
+const { textToSpeech } = require('./controllers/textToSpeechController');
 
 // Set up multer to handle file uploads
 const upload = multer({ dest: 'uploads/' });
@@ -16,6 +17,7 @@ app.use(bodyParser.json()); // This is fine for JSON data, not for file uploads
 // Webhook routes
 app.post('/subscribe', subscribeWebhook);
 app.get('/webhooks', getWebhooks);
+app.post('/tts', textToSpeech);
 
 // HTML to Image route
 app.post('/html-to-image', upload.single('htmlFile'), htmlToImageFunction); // Use multer to handle file uploads
