@@ -7,6 +7,7 @@ const { startBot } = require('./controllers/discordController');
 const { subscribeWebhook, getWebhooks } = require('./controllers/webhookController');
 const { htmlToImageFunction } = require('./controllers/htmlToImageController'); // Updated import
 const { textToSpeech } = require('./controllers/textToSpeechController');
+const { startCai } = require('./controllers/textToSpeechController');
 
 // Set up multer to handle file uploads
 const upload = multer({ dest: 'uploads/' });
@@ -31,3 +32,4 @@ app.listen(PORT, () => {
 // Start Discord bot
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 startBot(DISCORD_TOKEN);
+startCai(process.env.CHARACTER_AI_ACCESS_TOKEN);
