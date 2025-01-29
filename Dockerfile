@@ -1,5 +1,5 @@
 # Use an official Node.js image as the base image
-FROM node:18
+FROM node:22
 
 # Install necessary dependencies for Chromium
 RUN apt-get update && apt-get install -y \
