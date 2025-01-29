@@ -1,48 +1,69 @@
 require('dotenv').config();
 
+const startCai = async function (token) {
+    try {
+        const client = new (await import("cainode")).CAINode();
+        await client.login(token);
+        console.log("Logged in to Character AI");
+        return client;
+    } catch (error) {
+        console.error("Error logging in to Character AI:", error);
+        throw error;  // Re-throw error to be handled upstream
+    }
+};
 
-const startCai = (async function (token) {
-   const client = new (await import("cainode")).CAINode();
-   await client.login(token);  
-   console.log("Logged in to Character AI");
-   return client;
-})
-
-const endCai = (async function (client) {
-   await client.logout();  
-   console.log("Logged out of Character AI");
-   return;
-})
+const endCai = async function (client) {
+    try {
+        if (client) {
+            await client.logout();
+            console.log("Logged out of Character AI");
+        }
+    } catch (error) {
+        console.error("Error logging out of Character AI:", error);
+    }
+};
 
 const textToSpeech = async (req, res) => {
+    console.log("Received request to text to speech");
 
-   console.log("Received request to text to speech");
+    let client;
+    try {
+        client = await startCai(process.env.CHARACTER_AI_ACCESS_TOKEN);
 
+        const { cid, content, voiceId } = req.body;
 
-   const client = await startCai(process.env.CHARACTER_AI_ACCESS_TOKEN);
+        if (!cid || !content || !voiceId) {
+            throw new Error("Missing required parameters: cid, content, or voiceId");
+        }
 
-   const cid = req.body.cid;
-   const text = req.body.content;
-   const voiceId = req.body.voiceId;
-   const content = text.replace(/(\r\n|\n|\r)/gm, "");
+        const sanitizedContent = content.replace(/(\r\n|\n|\r)/gm, "");
 
-   console.log("Character ID", cid);
-   console.log("Voice ID", voiceId);
+        console.log("Character ID:", cid);
+        console.log("Voice ID:", voiceId);
 
-   await client.character.connect(cid);
-   await client.character.create_new_conversation(true);
+        await client.character.connect(cid);
+        await client.character.create_new_conversation(true);
 
-   const response = await client.character.send_message(`!Re "${content}"`, false);
+        const response = await client.character.send_message(`!Re "${sanitizedContent}"`, false);
 
-   const turnId = response.turn.turn_key.turn_id;
-   const candidateId = response.turn.candidates[0].candidate_id;
-   const tts = await client.character.replay_tts(turnId, candidateId, voiceId);
+        if (!response || !response.turn || !response.turn.turn_key || !response.turn.candidates.length) {
+            throw new Error("Invalid response from Character AI");
+        }
 
-   res.send(tts);
+        const turnId = response.turn.turn_key.turn_id;
+        const candidateId = response.turn.candidates[0].candidate_id;
+        const tts = await client.character.replay_tts(turnId, candidateId, voiceId);
 
-   await client.character.disconnect();
-   await endCai(client);
-
-}
+        res.send(tts);
+    } catch (error) {
+        console.error("Error processing text-to-speech request:", error);
+        res.status(500).json({ error: error.message || "Internal Server Error" });
+    } finally {
+        if (client) {
+            await client.character.disconnect();
+            await endCai(client);
+        }
+    }
+};
 
 module.exports = { textToSpeech };
